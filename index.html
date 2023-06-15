@@ -236,7 +236,7 @@
                 var ipaddr = ip;
                 axios({
                         method: "POST",
-                        url: "http://" + ipaddr + ":7010/VIID/login/v2",
+                        url: "https://" + ipaddr + ":7010/VIID/login/v2",
                         headers: {
                             "Content-Type": "application/json; charset=utf8"
                         },
@@ -259,7 +259,7 @@
                         };
                         axios({
                                 method: "POST",
-                                url: "http://" + ipaddr + ":7010/VIID/login/v2",
+                                url: "https://" + ipaddr + ":7010/VIID/login/v2",
                                 headers: {
                                     "Content-Type": "application/json; charset=utf8"
                                 },
@@ -411,7 +411,7 @@
                 };
                 $.ajax({
                     type: "GET",
-                    url: "http://" + vmip + ":7010/VIID/query",
+                    url: "https://" + vmip + ":7010/VIID/query",
                     data: {
                         org: data.org,
                         condition: JSON.stringify(data.condition)
@@ -485,12 +485,12 @@
                 /** 切换实况 通信方式 */
                 checkNetLinkMode()
                 // $("#playLiveId").trigger("click");;    
-                // http://10.1.13.7:7010/static/imosSdk.min.js
+                // https://10.1.13.7:7010/static/imosSdk.min.js
                 playLive(iframeObj.id, videoNum)
             }, 1000);
         })
     </script>
-    <script type="text/javascript" src="http://10.1.13.7:7010/static/imosSdk.min.js"></script> 
+    <script type="text/javascript" src="https://10.1.13.7:7010/static/imosSdk.min.js"></script> 
     <!-- <script type="text/javascript" src="https://smartkey.sandau.edu.cn/static/imosSdk.min.js "></script>
     <script type="text/javascript" src="./static/imosSdk.min.js"></script>-->
 
