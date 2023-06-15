@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> -->
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>imosVideoDemo</title>
+    <link rel="shortcut icon" href="piv.ico" />
+    <script type="text/javascript" src="./static/axios.min.js"></script>
+    <script type="text/javascript" src="./static/forge.min.js"></script>
+    <script type="text/javascript" src="./static/jquery-1.9.1.js"></script>
+
+    <style>
+        body,
+        html{
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+            background-color: pink;
+        }
+
+        .forVideo {
+            display: flex;
+            flex-flow: row wrap;
+            width: 100%;
+            height: auto;
+            background-color: bisque;
+            justify-content: center;
+        }
+        .imosSdk-video{
+            width: 600px !important;
+            height: 400px !important;     
+        }
+        .lineBase{
+        
+        } 
+        .lineBase .btn{
+            border: none;
+            padding: 4px 10px;
+            background-color: black;
+            color: white;
+            border-radius: 4px;
+            line-height: 18px;
+            height: 24px;
+        }
+        .fenge{
+        display: inline-block;
+        background-color: #383535;
+        width: 2px;
+        height: 24px;
+        margin: 0 4px;
+        /* top: 7px; */
+        position: relative;
+        }
+        .line2 .date{
+            border: 1px black solid;
+            border-radius: 4px;
+            height: 20px;
+        }
+        .line3,.line2 {
+            border: 1px black solid;
+            align-items: center;
+            display: flex;
+            padding: 4px;
+            border-radius: 4px;
+            justify-content: space-around;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+    <button onclick="queryCam()" id="queryCamBtn">查询相机资源</button>  
+     CamCode <input type="text" value="" id="getCamID" />
+    <button onclick="replay()">回看</button> -->
+    <div class="forVideo"></div>
+    <script>
+        var iframeObj;
+        var videoDom = document.getElementsByClassName("forVideo")[0];
+        var videoNum = 0; //video的数量
+        let NetLink = "tcp"
+        let isMs = true
+        let pictureFluency = 1
+        let ip = "10.1.13.7",
+            uname = "loadmin",
+            pwd = "Admin123456"
+
+        function getQueryParams(name) {
+            var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
+            var r = window.location.search.substr(1).match(reg);
+            if (r != null) {
+                return unescape(r[2]);
+            }
+            return null;
+        }
+        let queryCameraCode = getQueryParams("camerCode") || "78-A4-40_1";
+        // 截取 url query 参数 部分
+
+        // 播放实况
+        function playLive(iframeId, videoIndex) {
+            console.log("playLive-实况相关");
+            if (!window.token) {
+                alert("请先登录");
+                return;
+            }
+            var cameraCode = queryCameraCode;
+            imosSdk.playLive(
+                iframeId,
+                cameraCode,
+                cameraCode,
+                function (e) {
+                    console.log(e);
+                }, 1
+            );
+            cameraCode = null;
+        }
+        // 停止播放实况
+        function stopPlay(iframeId) {
+            console.log("stopPlay")
+            if (!window.token) {
+                alert("请先登录");
+                return;
+            }
+            imosSdk.playStop(iframeId, function (e) {
+                console.log(e);
+            });
+        }
+        /**
+         * 播放回放
+         */
+        function replay(iframeId, videoIndex) {
+            console.log("replay")
+            if (!window.token) {
+                alert("请先登录");
+                return;
+            }
+            var start = new Date(
+                document.getElementById("startd" + iframeId).value +
+                " " +
+                document.getElementById("startt" + iframeId).value
+            );
+            var end = new Date(
+                document.getElementById("endd" + iframeId).value +
+                " " +
+                document.getElementById("endt" + iframeId).value
+            );
+            var cameraCode = queryCameraCode; // 111
+            imosSdk.playRecord(
+                iframeId,
+                cameraCode,
+                cameraCode,
+                start,
+                end,
+                function (e) {
+                    console.log(e);
+                }
+            );
+        }
+        // 播放当前
+        function continuePlay(iframeId) {
+            imosSdk.switchPlayStatus(iframeId, function (e) {
+                console.log(e);
+            }, true);
+        }
+        //暂停播放
+        function pausePlay(iframeId) {
+            imosSdk.switchPlayStatus(iframeId, function (e) {
+                console.log(e);
+            }, false);
+        }
+        // 播放速度切换只2倍
+
+        function playSpeed(iframeId) {
+            var btn = document.getElementById(iframeId + '-speed');
+            var speed = 2;
+
+            if (typeof (btn.nextSpeed) === 'number') {
+                speed = btn.nextSpeed;
+            }
+            imosSdk.recordSpeed(iframeId, speed, function (e) {
+                console.log(e);
+            });
+            switch (speed) {
+                case 1:
+                    btn.nextSpeed = 2;
+                    btn.innerText = '切换到' + btn.nextSpeed + '倍速';
+                    break;
+                case 2:
+                    btn.nextSpeed = 4;
+                    btn.innerText = '切换到' + btn.nextSpeed + '倍速';
+                    break;
+                case 4:
+                    btn.nextSpeed = 8;
+                    btn.innerText = '切换到' + btn.nextSpeed + '倍速';
+                    break;
+                case 8:
+                    btn.nextSpeed = 1 / 8;
+                    btn.innerText = '切换到' + btn.nextSpeed + '倍速';
+                    break;
+                case 1 / 8:
+                    btn.nextSpeed = 1;
+                    btn.innerText = '切换到' + btn.nextSpeed + '倍速';
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        // 状态输出到控制台
+        function playStatus(iframeId) {
+            imosSdk.playStatus(iframeId, function (e) {
+                console.log(e);
+            })
+        }
+        /**
+         * 跳转播放
+         */
+        function recordJump(iframeId) {
+            var jumoTime = document.getElementById("recordJump").value;
+            imosSdk.recordJump(iframeId, jumoTime, function (e) {
+                console.log(e);
+            });
+        }
+        $(function () {
+
+
+            //#region 准备部分
+            /**
+             * 登录 imos 服务
+             */
+            function login(ip, uname, pwd) {
+                var password = pwd;
+                var username = uname;
+                var ipaddr = ip;
+                axios({
+                        method: "POST",
+                        url: "http://" + ipaddr + ":7010/VIID/login/v2",
+                        headers: {
+                            "Content-Type": "application/json; charset=utf8"
+                        },
+                        responseType: "json"
+                    }).then(function (res) {
+                        var accessCode = res.data.AccessCode;
+                        var md1 = forge.md.md5.create(); //md5
+                        var md2 = forge.md.md5.create(); //md5
+                        md1.update(password); //md5
+                        var passwordMd5 = md1.digest().toHex(); //md5
+                        var base64Username = window.btoa(username);
+                        var loginSignatureTemp =
+                            base64Username + accessCode + passwordMd5;
+                        md2.update(loginSignatureTemp); //md5
+                        var loginSignature = md2.digest().toHex(); //md5
+                        var data = {
+                            UserName: username,
+                            AccessCode: accessCode,
+                            LoginSignature: loginSignature
+                        };
+                        axios({
+                                method: "POST",
+                                url: "http://" + ipaddr + ":7010/VIID/login/v2",
+                                headers: {
+                                    "Content-Type": "application/json; charset=utf8"
+                                },
+                                responseType: "json",
+                                data: data
+                            }).then(function (r) {
+                                loginResult = r.data.ErrCode;
+                                switch (
+                                    loginResult //判断返回值：12351是‘用户不存在’；50004是‘密码错误，登录失败’
+                                ) {
+                                    case 50004:
+                                        alert("密码错误");
+                                        break;
+                                    case 12351:
+                                        alert("用户不存在");
+                                        break;
+                                    case undefined:
+                                        window.token = r.data.AccessToken;
+                                        //在使用https 的时候设置为https 代理端口号
+                                        var ishttps = 'https:' == document.location.protocol ? true :
+                                            false;
+                                        var url = window.location.host;
+                                        if (ishttps) {
+                                            imosSdk.setLinkPort('7077');
+                                        }
+                                        var vmip = ip;
+                                        imosSdk.init(
+                                            vmip,
+                                            window.token,
+                                            9,
+                                            "/app/imosSdk.html"
+                                        ).then(function (res) {
+                                            console.log("登录成功");
+                                            createWindow()
+                                            //设置后续事件回调
+                                            imosSdk.registerLiveMsg((result) => {
+                                                // console.log(result)
+                                            })
+
+                                        }).catch(function (err) {
+                                            console.log(err);
+                                            alert("调用失败" + err);
+                                        });
+                                        break;
+                                }
+                            })
+                            .catch(function (e) {
+                                alert("服务器连接异常");
+                                console.log(e);
+                            });
+                    })
+                    .catch(function (error) {
+                        alert("服务器连接异常");
+                        console.log(error);
+                    });
+            }
+            /**
+             * 创建播放窗体
+             */
+            function createWindow() {
+                console.log("createWindow")
+                if (!window.token) {
+                    console.log("请先登录");
+                    return;
+                }
+
+                iframeObj = imosSdk.createPanelWindow();
+                console.log(iframeObj)
+                iframeObj.idTemp = "'" + iframeObj.id + "'"
+
+                // 如果窗格创建已经到达上限
+                if (iframeObj === null) {
+                    return;
+                }
+
+                createSpeDiv(iframeObj);
+                // 获取成功之后  设置一下 canvas 
+                $('.imosSdk-video').attr({
+                    height: "auto",
+                    width: "600px"
+                })
+                videoNum++;
+            }
+            /**
+             * 创建包含了input和按钮的div
+             * @param iframeObj iframe对象
+             **/
+            function createSpeDiv(iframeObj) {
+                console.log("createSpeDiv");
+                var divDom = document.createElement("div");
+                let date = new Date();
+                divDom.innerHTML =
+                    // 摄像机编码:<input type="text" value="${queryCameraCode}" class="cameraCode${videoNum}" />
+                    `
+        
+        <div class="lineBase line2">
+            <input class="date"  id="${'startd' +iframeObj.id }" type="date" value="${date.getFullYear() + '-' + ("0" + (date.getMonth() + 1)).substr(-2) + '-' + ("0" + date.getDate()).substr(-2) }"/>
+            <input class="date"  id="${'startt' +iframeObj.id }" type="time" value="01:00:00" step="1"/>
+            <input class="date"  id="${'endd' +iframeObj.id }" type="date" value="${date.getFullYear() + '-' + ("0" + (date.getMonth() + 1)).substr(-2) + '-' + ("0" + date.getDate()).substr(-2)}" step="1"/>
+            <input class="date"  id="${'endt' +iframeObj.id }" type="time" value="23:59:59" step="1"/>
+        </div>
+        <div class="lineBase line3">
+
+            <button id="playLiveId" class="btn"   onclick="playLive(${iframeObj.idTemp+','+videoNum })">实况</button>
+            <button class="btn"  onclick="stopPlay(${iframeObj.idTemp })">实况停止</button>
+            <span class="fenge"></span>
+            <button class="btn"  onclick="replay(${iframeObj.idTemp+','+videoNum})" >回放</button>
+            <button class="btn"  onclick="continuePlay(${iframeObj.idTemp})">回放播放</button>
+            <button class="btn"  onclick="pausePlay(${iframeObj.idTemp})">暂停</button>
+            <button class="btn"  onclick="playSpeed(${iframeObj.idTemp})" id="${iframeObj.id +'-speed'}">2倍速</button>
+        </div>
+            `;
+                // <div class="lineBase line4">
+                //     <button onclick="playStatus(${iframeObj.idTemp })">状态输出到控制台</button>
+                //     <input type="text" value="2020-04-03 13:30:00" id="recordJump"/>
+                //     <button onclick="recordJump(${iframeObj.idTemp})">跳转播放</button>
+                // </div>
+                divDom.appendChild(iframeObj);
+                videoDom.appendChild(divDom);
+                divDom = null;
+            }
+            //#endregion
+            /**
+             * 查询服务器上的 摄像机编码
+             */
+            function queryCam() {
+                var vmip = ip;
+                var data = {
+                    org: "iccsid",
+                    condition: {
+                        ItemNum: 3,
+                        Condition: [{
+                            "QueryType": 256,
+                            "LogicFlag": 0,
+                            "QueryData": "1001"
+                        }, {
+                            "QueryType": 257,
+                            "LogicFlag": 0,
+                            "QueryData": "1"
+                        }, {
+                            "QueryType": 1,
+                            "LogicFlag": 5,
+                            "QueryData": ""
+                        }],
+                        QueryCount: 1,
+                        PageFirstRowNumber: 0,
+                        PageRowNum: 20
+                    }
+                };
+                $.ajax({
+                    type: "GET",
+                    url: "http://" + vmip + ":7010/VIID/query",
+                    data: {
+                        org: data.org,
+                        condition: JSON.stringify(data.condition)
+                    },
+                    headers: {
+                        Authorization: window.token
+                    },
+                    contentType: "application/json",
+                    success: function (res) {
+                        var arr = [];
+                        if (res.ErrCode === 0) {
+                            var infoList = res.Result.InfoList;
+                            var len = infoList.length;
+                            for (var i = 0; i < len; i++) {
+                                if (infoList[i].ResItemV1.ResStatus === 1) {
+                                    arr.push(infoList[i].ResItemV1.ResCode);
+                                }
+                            }
+                            console.log(arr.join(','))
+                            // camInput.value = arr.join(',');
+                        }
+                    }
+                })
+            }
+
+            //#region 本地播放器
+
+
+            function switchPlay(iframeId) {
+                imosSdk.switchPlayStatus(iframeId, function (e) {
+                    console.log(e);
+                });
+            }
+
+
+            //#endregion
+
+            //#region  实况相关
+
+            // 切换信号源
+            function checkNetLinkMode() {
+
+                NetLink = NetLink == "auto" ? "tcp" : "auto"
+                pictureFluency = pictureFluency == "1" ? "2" : "1"
+                isMs = !isMs
+                imosSdk.setLiveNetLinkMode(NetLink, isMs)
+                imosSdk.setPictureFluency(Number(pictureFluency))
+                imosSdk.sendWebPlayerCfg()
+
+            }
+
+            //#endregion
+
+            /**
+             * 首先自己登录
+             * 然后创建窗格
+             * 精简 创建的 video
+             * 在 createSpeDiv 内部塞入 queryCameraCode 相机编码
+             *  切换视频传输模式 因为默认的tcp 宇视有问题 需要切换成auto
+             * 
+             * 给speDiv 美化 增加样式
+             * 
+             */
+
+            login(ip, uname, pwd)
+            // 模拟点击 防止之前的没 创建完成，设置一个定时器
+            window.queryCam= (iframeId) => {
+                 queryCam() 
+                }
+            setTimeout(() => {
+                /** 切换实况 通信方式 */
+                checkNetLinkMode()
+                // $("#playLiveId").trigger("click");;    
+                // http://10.1.13.7:7010/static/imosSdk.min.js
+                playLive(iframeObj.id, videoNum)
+            }, 1000);
+        })
+    </script>
+    <script type="text/javascript" src="http://10.1.13.7:7010/static/imosSdk.min.js"></script> 
+    <!-- <script type="text/javascript" src="https://smartkey.sandau.edu.cn/static/imosSdk.min.js "></script>
+    <script type="text/javascript" src="./static/imosSdk.min.js"></script>-->
+
+</body>
+
+</html>
