@@ -236,7 +236,8 @@
                 var ipaddr = ip;
                 axios({
                         method: "POST",
-                        url: "https://" + ipaddr + ":7010/VIID/login/v2",
+                        // url: "https://" + ipaddr + ":7010/VIID/login/v2",
+                        url: "https://yushiPlayers.com:7010/VIID/login/v2",
                         headers: {
                             "Content-Type": "application/json; charset=utf8"
                         },
@@ -259,7 +260,8 @@
                         };
                         axios({
                                 method: "POST",
-                                url: "https://" + ipaddr + ":7010/VIID/login/v2",
+                                // url: "https://" + ipaddr + ":7010/VIID/login/v2",
+                                url: "https://yushiPlayers.com:7010/VIID/login/v2",
                                 headers: {
                                     "Content-Type": "application/json; charset=utf8"
                                 },
@@ -411,7 +413,8 @@
                 };
                 $.ajax({
                     type: "GET",
-                    url: "https://" + vmip + ":7010/VIID/query",
+                    // url: "https://" + vmip + ":7010/VIID/query",
+                    url: "https://yushiPlayers.com:7010/VIID/query",
                     data: {
                         org: data.org,
                         condition: JSON.stringify(data.condition)
